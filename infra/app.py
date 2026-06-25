@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
-from aws_cdk import core
+import aws_cdk as cdk
 
-from the_simple_webservice.the_simple_webservice_stack import TheSimpleWebserviceStack
+from stack import JournalAppStack
 
-
-app = core.App()
-TheSimpleWebserviceStack(app, "the-simple-webservice")
+app = cdk.App()
+JournalAppStack(app, "JournalAppStack")
 
 app.synth()

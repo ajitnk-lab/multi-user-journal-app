@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            color: #2c3e50;
+            font-size: 2em;
+        }
+        .nav-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .nav-bar button {
+            padding: 8px 16px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .nav-bar span {
+            padding: 8px 0;
+            color: #666;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        .btn-secondary {
+            background: #95a5a6;
+        }
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tabs button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .tabs button.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        .auth-toggle {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .auth-toggle a {
+            color: #3498db;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        .message.error {
+            background: #fde8e8;
+            color: #e74c3c;
+            display: block;
+        }
+        .message.success {
+            background: #e8fde8;
+            color: #27ae60;
+            display: block;
+        }
+        .entry-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .entry-item:last-child {
+            border-bottom: none;
+        }
+        .entry-item .content {
+            white-space: pre-wrap;
+            margin-bottom: 5px;
+        }
+        .entry-item .meta {
+            font-size: 12px;
+            color: #999;
+        }
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .hidden {
+            display: none;
+        }
+        .entries-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Journal App</h1>
+        </header>
+
+        <!-- Auth Section -->
+        <div id="auth-section">
+            <!-- Login Form -->
+            <div id="login-form" class="card">
+                <h2>Login</h2>
+                <div id="login-message" class="message"></div>
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter your password">
+                </div>
+                <button class="btn" onclick="login()">Login</button>
+                <div class="auth-toggle">
+                    <span>Don't have an account? </span>
+                    <a onclick="showRegister()">Register</a>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="card hidden">
+                <h2>Register</h2>
+                <div id="register-message" class="message"></div>
+                <div class="form-group">
+                    <label for="register-username">Username</label>
+                    <input type="text" id="register-username" placeholder="3-20 alphanumeric characters">
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" placeholder="Minimum 8 characters">
+                </div>
+                <button class="btn" onclick="register()">Register</button>
+                <div class="auth-toggle">
+                    <span>Already have an account? </span>
+                    <a onclick="showLogin()">Login</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Journal Section -->
+        <div id="journal-section" class="hidden">
+            <div class="nav-bar">
+                <span id="welcome-user"></span>
+                <button onclick="logout()">Logout</button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button id="tab-write" class="active" onclick="showTab('write')">Write</button>
+                <button id="tab-entries" onclick="showTab('entries')">My Entries</button>
+                <button id="tab-search" onclick="showTab('search')">Search</button>
+            </div>
+
+            <!-- Write Entry -->
+            <div id="panel-write" class="card">
+                <h2>New Journal Entry</h2>
+                <div id="write-message" class="message"></div>
+                <div class="form-group">
+                    <textarea id="entry-content" placeholder="Write your thoughts here..."></textarea>
+                </div>
+                <button class="btn" onclick="createEntry()">Save Entry</button>
+            </div>
+
+            <!-- Entries List -->
+            <div id="panel-entries" class="card hidden">
+                <h2>My Entries</h2>
+                <div id="entries-list" class="entries-list">
+                    <div class="empty-state">Loading entries...</div>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div id="panel-search" class="card hidden">
+                <h2>Search Entries</h2>
+                <div class="search-bar">
+                    <input type="text" id="search-query" placeholder="Search your entries...">
+                    <button class="btn" onclick="searchEntries()">Search</button>
+                </div>
+                <div id="search-results" class="entries-list">
+                    <div class="empty-state">Enter a search term to find entries</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration - update this with your API Gateway URL after deployment
+        const API_BASE_URL = localStorage.getItem('api_url') || '';
+
+        // Token management
+        function getToken() {
+            return localStorage.getItem('jwt_token');
+        }
+
+        function setToken(token) {
+            localStorage.setItem('jwt_token', token);
+        }
+
+        function removeToken() {
+            localStorage.removeItem('jwt_token');
+        }
+
+        function getUsername() {
+            return localStorage.getItem('username');
+        }
+
+        function setUsername(username) {
+            localStorage.setItem('username', username);
+        }
+
+        // API helper
+        async function apiRequest(method, path, body) {
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+
+            const token = getToken();
+            if (token) {
+                headers['Authorization'] = 'Bearer ' + token;
+            }
+
+            const options = {
+                method: method,
+                headers: headers,
+            };
+
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(API_BASE_URL + path, options);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Request failed');
+            }
+
+            return data;
+        }
+
+        // Auth functions
+        async function login() {
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            const messageEl = document.getElementById('login-message');
+
+            if (!username || !password) {
+                showMessage(messageEl, 'Please enter username and password', 'error');
+                return;
+            }
+
+            try {
+                const data = await apiRequest('POST', '/auth/login', { username, password });
+                setToken(data.token);
+                setUsername(username);
+                showJournalSection();
+            } catch (err) {
+                showMessage(messageEl, err.message, 'error');
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('register-username').value.trim();
+            const password = document.getElementById('register-password').value;
+            const messageEl = document.getElementById('register-message');
+
+            if (!username || !password) {
+                showMessage(messageEl, 'Please enter username and password', 'error');
+                return;
+            }
+
+            try {
+                await apiRequest('POST', '/auth/register', { username, password });
+                showMessage(messageEl, 'Registration successful! You can now login.', 'success');
+                setTimeout(() => showLogin(), 1500);
+            } catch (err) {
+                showMessage(messageEl, err.message, 'error');
+            }
+        }
+
+        function logout() {
+            removeToken();
+            localStorage.removeItem('username');
+            showAuthSection();
+        }
+
+        // Entry functions
+        async function createEntry() {
+            const content = document.getElementById('entry-content').value.trim();
+            const messageEl = document.getElementById('write-message');
+
+            if (!content) {
+                showMessage(messageEl, 'Please write something before saving', 'error');
+                return;
+            }
+
+            try {
+                await apiRequest('POST', '/entries', { content });
+                showMessage(messageEl, 'Entry saved successfully!', 'success');
+                document.getElementById('entry-content').value = '';
+                setTimeout(() => { messageEl.className = 'message'; }, 2000);
+            } catch (err) {
+                showMessage(messageEl, err.message, 'error');
+            }
+        }
+
+        async function loadEntries() {
+            const listEl = document.getElementById('entries-list');
+
+            try {
+                const data = await apiRequest('GET', '/entries');
+                renderEntries(listEl, data.entries);
+            } catch (err) {
+                listEl.innerHTML = '<div class="empty-state">Failed to load entries: ' + err.message + '</div>';
+            }
+        }
+
+        async function searchEntries() {
+            const query = document.getElementById('search-query').value.trim();
+            const resultsEl = document.getElementById('search-results');
+
+            if (!query) {
+                resultsEl.innerHTML = '<div class="empty-state">Enter a search term to find entries</div>';
+                return;
+            }
+
+            try {
+                const data = await apiRequest('GET', '/entries/search?q=' + encodeURIComponent(query));
+                renderEntries(resultsEl, data.entries);
+            } catch (err) {
+                resultsEl.innerHTML = '<div class="empty-state">Search failed: ' + err.message + '</div>';
+            }
+        }
+
+        function renderEntries(container, entries) {
+            if (!entries || entries.length === 0) {
+                container.innerHTML = '<div class="empty-state">No entries found</div>';
+                return;
+            }
+
+            container.innerHTML = entries.map(entry => {
+                const date = entry.created_at
+                    ? new Date(entry.created_at * 1000).toLocaleString()
+                    : 'Unknown date';
+                return '<div class="entry-item">' +
+                    '<div class="content">' + escapeHtml(entry.content) + '</div>' +
+                    '<div class="meta">' + date + '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        // UI functions
+        function showLogin() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('register-form').classList.add('hidden');
+            clearMessages();
+        }
+
+        function showRegister() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('register-form').classList.remove('hidden');
+            clearMessages();
+        }
+
+        function showAuthSection() {
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('journal-section').classList.add('hidden');
+            showLogin();
+        }
+
+        function showJournalSection() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('journal-section').classList.remove('hidden');
+            document.getElementById('welcome-user').textContent = 'Hello, ' + getUsername();
+            showTab('write');
+        }
+
+        function showTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tabs button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+
+            // Update panels
+            document.getElementById('panel-write').classList.add('hidden');
+            document.getElementById('panel-entries').classList.add('hidden');
+            document.getElementById('panel-search').classList.add('hidden');
+            document.getElementById('panel-' + tab).classList.remove('hidden');
+
+            // Load entries when switching to entries tab
+            if (tab === 'entries') {
+                loadEntries();
+            }
+        }
+
+        function showMessage(element, text, type) {
+            element.textContent = text;
+            element.className = 'message ' + type;
+        }
+
+        function clearMessages() {
+            document.querySelectorAll('.message').forEach(el => {
+                el.className = 'message';
+                el.textContent = '';
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize - check if user is already logged in
+        (function init() {
+            if (getToken()) {
+                showJournalSection();
+            } else {
+                showAuthSection();
+            }
+        })();
+    </script>
+</body>
+</html>
