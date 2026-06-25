@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Address critical code review issues: REST/HTTP API event format mismatch, registration race condition, and DynamoDB pagination gaps.",
+  "status": "completed",
+  "steps": [
+    "Update src/handlers/auth.py to route using event['httpMethod'] and event['resource'] instead of event['routeKey']",
+    "Add ConditionExpression='attribute_not_exists(username)' to put_item in auth.py _register() and handle ConditionalCheckFailedException",
+    "Update src/handlers/entries.py to route using event['httpMethod'] and event['resource'] instead of event['routeKey']",
+    "Add LastEvaluatedKey pagination loop in entries.py _list_entries()",
+    "Update src/handlers/search.py to route using event['httpMethod'] and event['resource'] instead of event['routeKey']",
+    "Add LastEvaluatedKey pagination loop in search.py _search_entries()",
+    "Update tests/helpers.py make_event() to generate REST API proxy format events (httpMethod + resource instead of routeKey)",
+    "Run tests and verify all pass"
+  ],
+  "acceptance_criteria": [
+    "All handlers route on event['httpMethod'] and event['resource'] (REST API format)",
+    "Registration put_item uses ConditionExpression to prevent username overwrites atomically",
+    "Both _list_entries and _search_entries handle DynamoDB pagination via LastEvaluatedKey",
+    "Tests use REST API event format and all 22+ tests pass",
+    "CDK synth still succeeds"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/multi-user-journal-app && python3 -m pytest tests/ -v",
+    "Run: cd /projects/sandbox/multi-user-journal-app/infra && source /root/.nvm/nvm.sh && npx aws-cdk@latest synth 2>&1 | tail -10"
+  ],
+  "blocked_reason": null,
+  "findings": "All 22 tests pass after switching to REST API event format. CDK synth still succeeds. The ConditionExpression on put_item works correctly with moto mock - existing duplicate username test passes without changes. Pagination loops added for both entry listing and search queries."
+}

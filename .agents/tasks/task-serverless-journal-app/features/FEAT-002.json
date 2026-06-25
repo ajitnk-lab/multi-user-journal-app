@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Modernize the CDK infrastructure from v1 to v2 and define all AWS resources: DynamoDB tables, Lambda functions, API Gateway HTTP API with routes, SSM parameter, and IAM permissions. Also create a simple HTML/JS frontend.",
+  "status": "completed",
+  "steps": [
+    "Rewrite infra/requirements.txt to use aws-cdk-lib>=2.100.0 and constructs>=10.0.0",
+    "Rewrite infra/app.py to use aws_cdk (v2) imports, instantiate JournalAppStack",
+    "Rewrite infra/stack.py with class JournalAppStack(Stack) that creates: (a) DynamoDB 'users' table with partition key 'username' (String), on-demand billing; (b) DynamoDB 'journal_entries' table with partition key 'username' (String) and sort key 'entry_id' (String), on-demand billing; (c) SSM StringParameter for JWT secret with a generated value; (d) Three Lambda functions (auth_handler, entries_handler, search_handler) using Python 3.11 runtime pointing to src/handlers/ code; (e) Lambda layer for dependencies (bcrypt, pyjwt, python-ulid); (f) API Gateway HttpApi with CORS configured (allow all origins, GET/POST/OPTIONS methods, Content-Type/Authorization headers); (g) Routes: POST /auth/register and POST /auth/login -> auth_handler, POST /entries and GET /entries -> entries_handler, GET /entries/search -> search_handler; (h) Grant DynamoDB read/write to appropriate Lambdas; (i) Grant SSM parameter read to all Lambdas; (j) CfnOutput for the API URL",
+    "Create frontend/index.html with a single-page application providing: login/register forms, journal entry creation textarea, entries list view, search bar. Use vanilla JavaScript with fetch() to call the API endpoints. Include JWT token storage in localStorage and auto-attach to Authorization header.",
+    "Update the top-level README.md with project description, architecture overview, API endpoints documentation, and deployment instructions"
+  ],
+  "acceptance_criteria": [
+    "infra/requirements.txt uses CDK v2 (aws-cdk-lib)",
+    "infra/stack.py defines complete stack with all resources",
+    "CDK synth produces valid CloudFormation template (validated by installing deps and running cdk synth)",
+    "frontend/index.html provides working UI for all user flows",
+    "README.md documents the API endpoints and architecture"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/multi-user-journal-app/infra && pip install -r requirements.txt && source /root/.nvm/nvm.sh && npx aws-cdk@latest synth --no-lookup 2>&1 | head -50",
+    "Run: python -c \"from pathlib import Path; html = Path('/projects/sandbox/multi-user-journal-app/frontend/index.html').read_text(); assert 'register' in html.lower() and 'login' in html.lower() and 'search' in html.lower(); print('Frontend OK')\""
+  ],
+  "blocked_reason": null,
+  "findings": "CDK synth produces valid CloudFormation. Used LambdaRestApi (REST API v1, aws_apigateway) instead of HTTP API alpha constructs since it is fully stable in aws-cdk-lib without extra alpha dependencies. The --no-lookup flag is not recognized by newer CDK CLI versions but synth still works. cdk.json uses python3 for the app command."
+}

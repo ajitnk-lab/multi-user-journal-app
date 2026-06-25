@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Add unit tests for all Lambda handlers and shared utilities. Tests should validate business logic without requiring AWS services (mock boto3 calls).",
+  "status": "completed",
+  "steps": [
+    "Create tests/requirements.txt with: pytest, pytest-mock, moto (for DynamoDB mocking), pyjwt, bcrypt, python-ulid",
+    "Create tests/__init__.py",
+    "Create tests/conftest.py with shared fixtures: mock DynamoDB tables (users, journal_entries), sample user data, sample JWT secret, helper to generate valid JWT tokens",
+    "Create tests/test_auth.py testing: (a) successful registration with valid credentials, (b) registration fails when username already exists, (c) registration fails when 10 users already exist, (d) registration fails with invalid username format, (e) registration fails with short password, (f) successful login returns JWT token, (g) login fails with wrong password, (h) login fails with nonexistent user",
+    "Create tests/test_entries.py testing: (a) create entry with valid token and content, (b) create entry fails without token (401), (c) create entry fails with expired token, (d) create entry fails with content exceeding 10000 chars, (e) list entries returns only authenticated user's entries sorted newest first, (f) list entries returns empty for user with no entries",
+    "Create tests/test_search.py testing: (a) search returns matching entries (case-insensitive), (b) search returns empty for no matches, (c) search fails without token (401), (d) search query exceeding 100 chars returns error, (e) search only returns current user's entries not other users'",
+    "Create tests/test_utils.py testing: (a) verify_token succeeds with valid token, (b) verify_token fails with expired token, (c) verify_token fails with invalid signature"
+  ],
+  "acceptance_criteria": [
+    "All tests pass when run with pytest",
+    "Tests use moto or mocks for DynamoDB (no real AWS calls)",
+    "Tests cover auth registration (including 10-user limit), login, entry CRUD, and search",
+    "Tests verify error responses have correct HTTP status codes",
+    "Each test exercises actual handler logic and would fail if the corresponding code were reverted"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/multi-user-journal-app && pip install -r tests/requirements.txt && pip install -r src/requirements.txt && python -m pytest tests/ -v"
+  ],
+  "blocked_reason": null,
+  "findings": "Fixed Decimal serialization bug in entries.py and search.py handlers - DynamoDB returns Decimal for numeric fields (created_at) which json.dumps cannot serialize natively. Added _DecimalEncoder class to both handlers. All 22 tests pass. Python version on this machine is 3.9.25 (not 3.11 as documented). Used moto's mock_aws context manager (unified API). The tests/helpers.py module holds generate_token() and make_event() utilities since pytest conftest.py cannot be imported directly as a module."
+}
