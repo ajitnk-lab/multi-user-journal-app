@@ -1,5 +1,6 @@
 import json
 import os
+from decimal import Decimal
 
 import boto3
 
@@ -64,6 +65,17 @@ def _search_entries(event):
     return _response(200, {"entries": entries})
 
 
+class _DecimalEncoder(json.JSONEncoder):
+    """JSON encoder that converts Decimal values to int or float."""
+
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            if obj % 1 == 0:
+                return int(obj)
+            return float(obj)
+        return super().default(obj)
+
+
 def _response(status_code, body):
     """Create a standardized API Gateway response."""
     return {
@@ -74,5 +86,5 @@ def _response(status_code, body):
             "Access-Control-Allow-Headers": "Content-Type,Authorization",
             "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
         },
-        "body": json.dumps(body),
+        "body": json.dumps(body, cls=_DecimalEncoder),
     }
