@@ -1,0 +1,27 @@
+{
+  "project_type": "Serverless journal application with AWS CDK infrastructure, Python Lambda handlers, and HTML/JS frontend",
+  "language": "Python (backend/infra), JavaScript/HTML (frontend)",
+  "build_system": "AWS CDK v2 (Python), pip for dependencies. Node.js required for CDK CLI. Use `source /root/.nvm/nvm.sh` before any node/npm/npx commands.",
+  "test_framework": "pytest for unit tests of Lambda handler logic",
+  "build_command": "cd /projects/sandbox/multi-user-journal-app && source /root/.nvm/nvm.sh && cd infra && pip install -r requirements.txt && npx cdk synth",
+  "test_command": "cd /projects/sandbox/multi-user-journal-app && python -m pytest tests/ -v",
+  "verification_instructions": "1. Install CDK deps and run cdk synth to validate infrastructure. 2. Run pytest for Lambda handler unit tests. 3. Verify frontend HTML loads without errors.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "1. source /root/.nvm/nvm.sh && npm install -g aws-cdk. 2. cd infra && pip install -r requirements.txt. 3. pip install -r src/requirements.txt for Lambda deps.",
+  "environment_constraints": "OPEN_INTERNET - full network access. Python 3.11 default. Node v22 via nvm. Cannot actually deploy to AWS (no credentials), but can validate CDK synth and run unit tests.",
+  "contribution_requirements": "From .kiro/specs: Must use AWS CDK for IaC, custom JWT auth (not Cognito), DynamoDB for storage, max 10 users enforced, bcrypt for passwords, ULID for entry IDs.",
+  "key_patterns": "Design specifies: 3 Lambda functions (auth_handler, entries_handler, search_handler), 2 DynamoDB tables (users, journal_entries), SSM Parameter Store for JWT secret, API Gateway HTTP API with CORS.",
+  "relevant_files": [
+    "infra/app.py",
+    "infra/stack.py",
+    "infra/cdk.json",
+    "infra/requirements.txt",
+    "src/handlers/auth.py",
+    "src/handlers/entries.py",
+    "src/handlers/search.py",
+    "src/utils/auth.py",
+    "frontend/index.html",
+    "tests/"
+  ],
+  "directory_structure": "infra/ - CDK infrastructure code. src/handlers/ - Lambda function code. src/utils/ - shared utilities. frontend/ - static HTML/JS frontend. tests/ - pytest unit tests."
+}

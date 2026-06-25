@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Implement the complete backend: Lambda handlers for authentication, journal entries, and search with shared utilities. Also set up the project dependency files.",
+  "status": "completed",
+  "steps": [
+    "Create src/requirements.txt with dependencies: boto3, bcrypt, pyjwt, python-ulid",
+    "Create src/utils/__init__.py and src/utils/auth.py with shared JWT verification (verify_token, get_jwt_secret using SSM Parameter Store, custom AuthError exception class)",
+    "Create src/handlers/__init__.py",
+    "Create src/handlers/auth.py implementing POST /auth/register and POST /auth/login. Register: validate username (3-20 chars, alphanumeric), validate password (min 8 chars), check user count < 10, check username uniqueness, hash with bcrypt, store in DynamoDB. Login: verify credentials, generate JWT with 24h expiry signed with SSM-stored secret.",
+    "Create src/handlers/entries.py implementing POST /entries (create entry with ULID id, validate content max 10000 chars) and GET /entries (list user's entries sorted newest first). Both require JWT auth.",
+    "Create src/handlers/search.py implementing GET /entries/search?q=query. Verify JWT, query user's entries, filter case-insensitive substring match on content, max query length 100 chars.",
+    "Ensure all handlers return consistent JSON responses with proper HTTP status codes (200, 201, 400, 401, 500) and error format {\"error\": \"message\"}",
+    "Handle API Gateway HTTP API event format (version 2.0) with routeKey-based routing within each handler"
+  ],
+  "acceptance_criteria": [
+    "src/handlers/auth.py exists with register and login logic",
+    "src/handlers/entries.py exists with create and list logic",
+    "src/handlers/search.py exists with search logic",
+    "src/utils/auth.py exists with verify_token and get_jwt_secret",
+    "All handlers use consistent error response format",
+    "10-user limit is enforced in registration",
+    "Password hashing uses bcrypt",
+    "JWT tokens include username claim and 24h expiry"
+  ],
+  "verification": [
+    "Run: python -c \"import sys; sys.path.insert(0, 'src'); from handlers import auth, entries, search; from utils.auth import verify_token, get_jwt_secret; print('All imports successful')\"",
+    "Run: python -m pytest tests/ -v (after tests are created in FEAT-003)"
+  ],
+  "blocked_reason": null,
+  "findings": "All handlers implemented and imports verified. python3 (not python) is the correct command. Infra requirements.txt has CDK v1 deps with -e . which fails pip install (no setup.py) - this will need fixing in the infra feature. src dependencies install fine."
+}
