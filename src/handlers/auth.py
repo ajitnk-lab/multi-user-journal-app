@@ -18,11 +18,12 @@ def handler(event, context):
         POST /auth/login - Login and get JWT token
     """
     try:
-        route_key = event.get("routeKey", "")
+        http_method = event.get("httpMethod", "")
+        resource = event.get("resource", "")
 
-        if route_key == "POST /auth/register":
+        if http_method == "POST" and resource == "/auth/register":
             return _register(event)
-        elif route_key == "POST /auth/login":
+        elif http_method == "POST" and resource == "/auth/login":
             return _login(event)
         else:
             return _response(400, {"error": "Invalid route"})
@@ -58,22 +59,21 @@ def _register(event):
     if user_count >= 10:
         return _response(400, {"error": "Maximum number of users reached"})
 
-    # Check if username already exists
-    get_response = table.get_item(Key={"username": username})
-    if "Item" in get_response:
-        return _response(400, {"error": "Username already exists"})
-
     # Hash password with bcrypt (12 salt rounds)
     password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12))
 
-    # Store user in DynamoDB
-    table.put_item(
-        Item={
-            "username": username,
-            "password_hash": password_hash.decode("utf-8"),
-            "created_at": int(time.time()),
-        }
-    )
+    # Store user in DynamoDB with atomic uniqueness check
+    try:
+        table.put_item(
+            Item={
+                "username": username,
+                "password_hash": password_hash.decode("utf-8"),
+                "created_at": int(time.time()),
+            },
+            ConditionExpression="attribute_not_exists(username)",
+        )
+    except dynamodb.meta.client.exceptions.ConditionalCheckFailedException:
+        return _response(400, {"error": "Username already exists"})
 
     return _response(201, {"message": "User registered successfully"})
 

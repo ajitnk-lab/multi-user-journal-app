@@ -17,11 +17,12 @@ def handler(event, context):
         GET /entries - List all entries for the authenticated user
     """
     try:
-        route_key = event.get("routeKey", "")
+        http_method = event.get("httpMethod", "")
+        resource = event.get("resource", "")
 
-        if route_key == "POST /entries":
+        if http_method == "POST" and resource == "/entries":
             return _create_entry(event)
-        elif route_key == "GET /entries":
+        elif http_method == "GET" and resource == "/entries":
             return _list_entries(event)
         else:
             return _response(400, {"error": "Invalid route"})
@@ -80,10 +81,22 @@ def _list_entries(event):
     table = dynamodb.Table(table_name)
 
     # Query entries by username, sorted by entry_id (ULID) descending
-    response = table.query(
-        KeyConditionExpression=boto3.dynamodb.conditions.Key("username").eq(username),
-        ScanIndexForward=False,  # Sort descending (newest first)
-    )
+    # Handle pagination to retrieve all results beyond DynamoDB 1 MB limit
+    all_items = []
+    query_kwargs = {
+        "KeyConditionExpression": boto3.dynamodb.conditions.Key("username").eq(username),
+        "ScanIndexForward": False,  # Sort descending (newest first)
+    }
+
+    while True:
+        response = table.query(**query_kwargs)
+        all_items.extend(response.get("Items", []))
+
+        # Check if there are more pages
+        last_key = response.get("LastEvaluatedKey")
+        if not last_key:
+            break
+        query_kwargs["ExclusiveStartKey"] = last_key
 
     entries = [
         {
@@ -91,7 +104,7 @@ def _list_entries(event):
             "content": item["content"],
             "created_at": item.get("created_at"),
         }
-        for item in response.get("Items", [])
+        for item in all_items
     ]
 
     return _response(200, {"entries": entries})

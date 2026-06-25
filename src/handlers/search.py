@@ -14,9 +14,10 @@ def handler(event, context):
         GET /entries/search - Search entries by content substring
     """
     try:
-        route_key = event.get("routeKey", "")
+        http_method = event.get("httpMethod", "")
+        resource = event.get("resource", "")
 
-        if route_key == "GET /entries/search":
+        if http_method == "GET" and resource == "/entries/search":
             return _search_entries(event)
         else:
             return _response(400, {"error": "Invalid route"})
@@ -44,11 +45,22 @@ def _search_entries(event):
     dynamodb = boto3.resource("dynamodb")
     table = dynamodb.Table(table_name)
 
-    # Query entries by username
-    response = table.query(
-        KeyConditionExpression=boto3.dynamodb.conditions.Key("username").eq(username),
-        ScanIndexForward=False,
-    )
+    # Query entries by username with pagination to handle results beyond 1 MB
+    all_items = []
+    query_kwargs = {
+        "KeyConditionExpression": boto3.dynamodb.conditions.Key("username").eq(username),
+        "ScanIndexForward": False,
+    }
+
+    while True:
+        response = table.query(**query_kwargs)
+        all_items.extend(response.get("Items", []))
+
+        # Check if there are more pages
+        last_key = response.get("LastEvaluatedKey")
+        if not last_key:
+            break
+        query_kwargs["ExclusiveStartKey"] = last_key
 
     # Filter by case-insensitive substring match on content
     query_lower = query.lower()
@@ -58,7 +70,7 @@ def _search_entries(event):
             "content": item["content"],
             "created_at": item.get("created_at"),
         }
-        for item in response.get("Items", [])
+        for item in all_items
         if query_lower in item.get("content", "").lower()
     ]
 

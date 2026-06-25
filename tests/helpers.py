@@ -35,18 +35,27 @@ def generate_token(username, expired=False):
 
 
 def make_event(route_key, body=None, headers=None, query_params=None):
-    """Create a mock API Gateway HTTP API v2 event.
+    """Create a mock API Gateway REST API proxy integration event.
 
     Args:
         route_key: The route key (e.g., "POST /auth/register").
+            Parsed into httpMethod and resource for REST API format.
         body: Dict to serialize as JSON body, or None.
         headers: Dict of headers, or None.
         query_params: Dict of query string parameters, or None.
 
     Returns:
-        A dict matching the API Gateway event format.
+        A dict matching the API Gateway REST API proxy event format.
     """
-    event = {"routeKey": route_key}
+    # Parse "METHOD /path" into httpMethod and resource
+    parts = route_key.split(" ", 1)
+    http_method = parts[0] if len(parts) > 0 else ""
+    resource = parts[1] if len(parts) > 1 else ""
+
+    event = {
+        "httpMethod": http_method,
+        "resource": resource,
+    }
     if body is not None:
         event["body"] = json.dumps(body)
     if headers is not None:
